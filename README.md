@@ -1,2 +1,6 @@
-# ConvertSQL
-使用nodejs将sqlserver数据迁移
+
+**1.安装mssql：**
+
+    npm install mssql
+    
+**2.官网：**
