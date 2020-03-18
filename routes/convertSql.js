@@ -17,9 +17,9 @@ function dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, 
                     mysqlSql = mysqlSql.replace(/_0001/g, '')
                     //5.创建mysql数据表
                     db2.query(mysqlSql, [], (err3, data3) => {
-                        if (!err3){
-                            console.error("第"+i+"个：：："+v.name+"  done！")
-                            callback(true,null)
+                        if (!err3) {
+                            console.error("第" + i + "个：：：" + v.name + "  done！")
+                            callback(true, null)
                             //6.查询视图数据 - 失败暂时不记录
                             /*db.sql(selectSql + v.name + ";", (err4, data4) => {
                                 if (data4 && data4.recordset && data4.recordset.length > 0) {
@@ -32,23 +32,27 @@ function dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, 
                                     });
                                 }
                             });*/
-                        }else{
+                        } else {
                             //已创建该表
-                            if ("ER_TABLE_EXISTS_ERROR"==err3.code){
-                                console.error( '第 ' + i + '行id=' + v.id + '【'+v.name+"  已创建")
-                            }else {
+                            if ("ER_TABLE_EXISTS_ERROR" == err3.code) {
+                                console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  已创建")
+                                callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|已创建|" + '】' + err3.message);
+                            } else if ("ER_WRONG_AUTO_KEY" == err3.code) {
+                                console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  暂不支持！")
+                                callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|暂不支持|" + '】' + err3.message);
+                            } else {
                                 // console.error(err3.message+"|"+err3.code)
-                                console.error( '第 ' + i + '行id=' + v.id + '【'+v.name+"  mysql表创建问题！"+err3.message)
-                                callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|mysql表创建问题|" + '】'+err3.message);
+                                console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  mysql表创建问题！" + err3.message)
+                                callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|mysql表创建问题|" + '】' + err3.message);
                             }
                         }
                     });
                 } else {
-                    console.error( '第 ' + i + '行id=' + v.id + '【'+v.name+"  建表语句转换问题！")
-                    callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|建表语句转换问题|"  + '】'+mysqlSql);
+                    console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  建表语句转换问题！")
+                    callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|建表语句转换问题|" + '】' + mysqlSql);
                 }
             } else {
-                console.error( '第 ' + i + '行id=' + v.id + '【'+v.name+" "+ err2 == null ? 'NULL' : err2.message )
+                console.error('第 ' + i + '行id=' + v.id + '【' + v.name + " " + err2 == null ? 'NULL' : err2.message)
                 callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "||" + err2 == null ? 'NULL' : err2.message + '】');
             }
         })
@@ -56,7 +60,7 @@ function dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, 
 }
 
 //获取所有视图的视图名称
-const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, i,recordset) {
+const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, i, recordset) {
     return new Promise(function (resolve, reject) {
         dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (err, data) => {
             if (!err) {
@@ -84,7 +88,7 @@ const dealSync = async function (data) {
     let msg = [];
     for (let i = 0; i < data.recordset.length; i++) {
         let v = data.recordset[i];
-        await asyncAjax(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, i,data.recordset);
+        await asyncAjax(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, i, data.recordset);
     }
 }
 
