@@ -117,5 +117,5 @@ function convertSql(bool, viewName, callback) {
 }
 
 convertSql(true, null);
-// convertSql(false, "v_BOM", (err, data) => {
+// convertSql(false, "v_ABCType", (err, data) => {
 // });

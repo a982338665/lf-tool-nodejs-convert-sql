@@ -1,4 +1,6 @@
 
+###存储过程初版来源：https://www.cnblogs.com/xinysu/p/6992415.html?utm_source=itdadao&utm_medium=referral
+
 **1.安装mssql：**
 
     npm install mssql
@@ -46,5 +48,15 @@
         ·问题：MaxValue关键字，作为字段时要写为：`MaxValue`
         ·解决：修改存储过程
         ·见convert5.sql
-                                                      
-        
+    3.'第 53行id=218744132【v_ERP_PrintOrder|建表语句转换问题|】null <br/>',
+      ·查看视图内容：
+            create view v_ERP_PrintOrder
+            as
+            select *from (
+             select  * from openquery([10.40.1.1],'select * FROM cux_purchase_order_for_mes where  PO_STATUS = ''批准'' and SubStr(ITEM_NUM,1,2)=''33'' and QTY_ORDERED>QTY_RECEIVED'))a
+            GO                                          
+      ·执行：在 sys.servers 中找不到服务器 '10.40.1.1'。请验证指定的服务器名称是否正确。如果需要，请执行存储过程 sp_addlinkedserver 以将服务器添加到 sys.servers。
+      ·问题：无法执行，即无法确定列字段，暂不解决
+    4.'第 211行id=837174328【v_mm_MaterialCoastStatistics|建表语句转换问题|】null <br/>',
+      ·问题：无法执行，视图列名无效，视图不正确
+    
