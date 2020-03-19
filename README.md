@@ -33,5 +33,18 @@
         ·报错：Incorrect table definition; there can be only one auto column and it must be defined as a key
         ·解决：添加为主键自增，或者放弃auto_increment
         ·见convert4.sql
-    2.
+    2.第 191行id=759829919【SDK_V_PAUserParameterValue  mysql表创建问题！ER_PARSE_ERROR: You have an error in your SQL syntax; check the manual that corresponds to your 
+        MySQL server version for the right syntax to use near 'MaxValue int  null
+        ·执行：exec p_tb_mssqltomysql 'SDK_V_PAUserParameterValue_0001';
+        ·获取建表语句：
+            CREATE TABLE SDK_V_PAUserParameterValue_001(ParameterId int  not null  
+                                                                 ,Value text  not null  
+                                                                 ,MinValue int  null  
+                                                                 ,MaxValue int  null  
+                                                                 ...
+                                                                 );
+        ·问题：MaxValue关键字，作为字段时要写为：`MaxValue`
+        ·解决：修改存储过程
+        ·见convert5.sql
+                                                      
         

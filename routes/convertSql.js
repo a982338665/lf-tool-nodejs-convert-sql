@@ -36,7 +36,7 @@ function dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, 
                             //已创建该表
                             if ("ER_TABLE_EXISTS_ERROR" == err3.code) {
                                 console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  已创建")
-                                callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|已创建|" + '】' + err3.message);
+                                callback(true, '第 ' + i + '行id=' + v.id + '【' + v.name + "|已创建|" + '】' + err3.message);
                             } else if ("ER_WRONG_AUTO_KEY" == err3.code) {
                                 console.error('第 ' + i + '行id=' + v.id + '【' + v.name + "  暂不支持！")
                                 callback(false, '第 ' + i + '行id=' + v.id + '【' + v.name + "|暂不支持|" + '】' + err3.message);
