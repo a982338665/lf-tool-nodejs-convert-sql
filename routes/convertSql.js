@@ -76,7 +76,7 @@ const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffix
 }
 
 //将视图转为表结构创建出来，不添加数据
-const dealSync = async function (data) {
+const dealSync = async function (data,callback) {
     let basedropSql = `drop table `
     let suffixSql = `_0001; `
     let baseCreateSql = `select top 500 * into `
@@ -90,9 +90,16 @@ const dealSync = async function (data) {
         let v = data.recordset[i];
         await asyncAjax(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, i, data.recordset);
     }
+    callback(true,data.recordset.length,msg)
 }
 
 // let sql = 'select TOP 0 * into v_BOM_01 from v_BOM;\n';
+/**
+ * sqlserver视图同步为mysql数据表
+ * @param bool
+ * @param viewName
+ * @param callback
+ */
 function convertSql(bool, viewName, callback) {
     //如果是true，获取所有视图转换
     let getView = "select id,name from sysobjects where xtype='V' ";
@@ -100,22 +107,33 @@ function convertSql(bool, viewName, callback) {
         if (viewName) {
             getView = getView + " and name = '" + viewName + "'";
         } else {
-            callback(0, '缺少视图名称！')
+            callback(false, '缺少视图名称！',null)
         }
     }
     // console.error(getView)
     //查询视图名称
     db.sql(getView, (err, data) => {
         if (data && data.recordset && data.recordset.length > 0) {
-            dealSync(data);
+            dealSync(data,(err,data,msg) => {
+                callback(err,data,msg)
+            });
         } else {
-            callback(0, "暂无视图")
+            callback(false, "暂无视图",null)
         }
     })
 
 
 }
 
-convertSql(true, null);
+convertSql(true, null,(isnot,data,msg) => {
+    if (isnot){
+        console.error("总共数据："+data)
+        console.error("创建成功："+(data-msg.length))
+        console.error("创建失败："+msg.length)
+        console.error("失败详情："+msg)
+    }else{
+        console.error(data)
+    }
+});
 // convertSql(false, "v_ABCType", (err, data) => {
 // });
