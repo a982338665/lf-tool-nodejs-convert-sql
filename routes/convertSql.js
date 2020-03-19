@@ -129,24 +129,29 @@ const dealSync = async function (data, type, callback) {
 // let sql = 'select TOP 0 * into v_BOM_01 from v_BOM;\n';
 /**
  * sqlserver视图同步为mysql数据表
- * @param bool
- * @param viewName
+ * @param bool = true 代表所有
+ * @param viewName bool=false时取出的名字
  * @param callback
- * type V-视图 U-表 P-存储过程 TR触发器
+ * @param type V-视图 U-表 P-存储过程 TR触发器
  * 仅支持视图和表同步
  */
-function convertSql(bool, viewName, type, callback) {
+function convertSql(bool, viewNames, type, callback) {
     //如果是true，获取所有视图转换
     let getView = "select id,name from sysobjects where xtype= " + "'" + type +
         "'";
     if (!bool) {
-        if (viewName) {
-            getView = getView + " and name = '" + viewName + "'";
+        if (viewNames && viewNames.length>0) {
+            getView = getView + " and name in (";
+            viewNames.forEach((v,i) => {
+                getView = getView + "'" +v + "',";
+            })
+            getView = (getView.substring(getView.length - 1) == ',') ? getView.substring(0, getView.length - 1) : getView;
+            getView = getView + ")";
         } else {
             callback(false, '缺少视图名称！', null, null)
         }
     }
-    // console.error(getView)
+    console.error(getView)
     //查询视图名称
     db.sql(getView, (err, data) => {
         if (data && data.recordset && data.recordset.length > 0) {
@@ -157,21 +162,19 @@ function convertSql(bool, viewName, type, callback) {
             callback(false, "暂无视图", null, null)
         }
     })
-
-
 }
 
-convertSql(true, null, "V", (isnot, data, msg, dropmsg) => {
-    if (isnot) {
-        console.error("总共数据：" + data)
-        console.error("创建成功：" + (data - msg.length))
-        console.error("创建失败：" + msg.length)
-        console.error("失败详情：" + msg)
-        console.error("删除失败：" + dropmsg.length)
-        console.error("删除失败详情：" + dropmsg)
-    } else {
-        console.error(data)
-    }
-});
-// convertSql(false, "v_ABCType", (err, data) => {
+// convertSql(true, null, "V", (isnot, data, msg, dropmsg) => {
+//     if (isnot) {
+//         console.error("总共数据：" + data)
+//         console.error("创建成功：" + (data - msg.length))
+//         console.error("创建失败：" + msg.length)
+//         console.error("失败详情：" + msg)
+//         console.error("删除失败：" + dropmsg.length)
+//         console.error("删除失败详情：" + dropmsg)
+//     } else {
+//         console.error(data)
+//     }
 // });
+convertSql(false, ["v_ABCType","v_bom"],'U', (err, data) => {
+});
