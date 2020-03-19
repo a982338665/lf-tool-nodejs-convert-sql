@@ -87,9 +87,9 @@ BEGIN
                    STUFF( (
                                SELECT
                                      ','+
-                                     "`"+
+                                     '`'+
                                      a.name+
-                                     "`"
+                                     '`'
                                     +
                                     case when b.name = 'timestamp' then ' timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP '
                                          when b.name = 'uniqueidentifier' then ' varchar(40) '
