@@ -1,4 +1,4 @@
-
+-- 解决float字段丢失问题：float字段保持原样
 USE SOADB_SC
 GO
 
@@ -88,6 +88,7 @@ BEGIN
                                     case when b.name = 'timestamp' then ' timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP '
                                          when b.name = 'uniqueidentifier' then ' varchar(40) '
                                          when b.name in ('char','nchar','nvarchar','varbinary','varchar') then ( case when a.length<0 then ' text ' else ' '+c.mysql+'('+ (case when b.name like 'n%' then cast(a.length/2 as varchar(10)) else cast(a.length as varchar(10)) end )+')'  end )
+                                         -- 下列去掉float，不改为float(num1.num2),会丢失数据字段
                                          when b.name in ('decimal','money','numeric','smallmoney') then ' '+c.mysql+'('+ cast(a.prec as varchar(10)) +','+ cast(a.scale as varchar(10)) +') '
                                          else ' '+c.mysql+' ' end
                                     +

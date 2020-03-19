@@ -1,5 +1,6 @@
 
--- 解决varchar>255的都换为text类型
+
+-- 解决主键自增问题
 USE SOADB_SC
 GO
 
@@ -94,7 +95,7 @@ BEGIN
                                     +
                                     case when a.isnullable=0 then ' not null ' else ' null ' end
                                     +
-                                    case when COLUMNPROPERTY( A.ID,A.NAME,'ISIDENTITY')=1 then ' auto_increment ' else '' end
+                                    case when COLUMNPROPERTY( A.ID,A.NAME,'ISIDENTITY')=1 then ' PRIMARY key AUTO_INCREMENT ' else '' end
                                     +
                                     case when a.length<0 or b.name in ('text') then ' '
                                          when e.text like ' ((%' then ' default '+substring(e.text,3,len(e.text)-4)

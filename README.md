@@ -21,3 +21,17 @@
             如果存放的时utf数据，那么64k大概可以存放21845个 utf8字符。
             对于大文本字段或大字节字段建议使用text和blob，为了提高查询效率，大文本/大字节字段需要单独出一个子表存放
       解决：convert3.sql,将varchar>255的都换为text类型
+      
+**5.关于代码中无法建表的原因：**
+    
+    1.第 459行id=1934734045【Timed_Event_Details_NPT  暂不支持！【convert4.sql】
+        ·执行：exec p_tb_mssqltomysql 'Timed_Event_Details_NPT_0001';
+        ·获取创建语句：CREATE TABLE Timed_Event_Details_NPT_0001(TEDet_Id int  not null  auto_increment  
+                                                             ,Action_Comment_Id int  null  
+                                                             ...
+                                                             );
+        ·报错：Incorrect table definition; there can be only one auto column and it must be defined as a key
+        ·解决：添加为主键自增，或者放弃auto_increment
+        ·见convert4.sql
+    2.
+        
