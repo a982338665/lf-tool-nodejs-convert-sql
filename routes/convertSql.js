@@ -92,10 +92,10 @@ const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffix
         dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (err, data) => {
             dropTableMssql(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (isnot, names, msgs) => {
                 if (!err) {
-                    msg.push(data + ' \n<br/>');
+                    msg.push(data + ' \n');
                 }
                 if (!isnot) {
-                    dropmsg.push(msgs + ' \n<br/>')
+                    dropmsg.push(msgs + ' \n')
                 }
                 resolve(1);
                 /*if (i === recordset.length - 1) {
@@ -121,12 +121,13 @@ const dealSync = async function (data, callback) {
         let v = data.recordset[i];
         await asyncAjax(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, dropmsg, i, data.recordset);
     }
-    callback(true, data.recordset.length, msg, dropmsg)
+    callback(true, data.recordset, msg, dropmsg)
 }
 
 // let sql = 'select TOP 0 * into v_BOM_01 from v_BOM;\n';
 /**
  * sqlserver视图同步为mysql数据表
+ * viewNames 和 type必须有一个有值
  * @param bool = true 代表所有
  * @param viewName bool=false时取出的名字
  * @param callback
@@ -134,6 +135,9 @@ const dealSync = async function (data, callback) {
  * 仅支持视图和表同步
  */
 function convertSql(bool, viewNames, type, callback) {
+    if (!viewNames && !type) {
+        callback(false, 'viewNames 和 type必须有一个有值！', null, null)
+    }
     //如果是true，获取所有视图转换
     let getView = "select id,name,xtype from sysobjects where 1=1  "
     if (type && (type == "U" || type == "V")) {
@@ -155,8 +159,8 @@ function convertSql(bool, viewNames, type, callback) {
     //查询视图名称
     db.sql(getView, (err, data) => {
         if (data && data.recordset && data.recordset.length > 0) {
-            dealSync(data, (err, data, msg, dropmsg) => {
-                callback(err, data, msg, dropmsg)
+            dealSync(data, (err2, data2, msg2, dropmsg2) => {
+                callback(err2, data2, msg2, dropmsg2)
             });
         } else {
             callback(false, "暂无视图", null, null)
@@ -230,9 +234,9 @@ const asyncInsertAjax = function (name, msg, names, i, insertMsg) {
     return new Promise(function (resolve, reject) {
         dealInsert(name, names, i, (isnot, data) => {
             if (!isnot) {
-                msg.push(data + ' \n<br/>');
+                msg.push(data + ' \n');
             } else {
-                insertMsg.push(data + ' \n<br/>');
+                insertMsg.push(data + ' \n');
             }
             resolve(1);
             /*if (i === names.length - 1) {
@@ -257,16 +261,23 @@ const asyncInsertAjax = function (name, msg, names, i, insertMsg) {
 // });
 convertSql(false, ["v_ABCType", "v_bom"], 'V', (isnot, data, msg, dropmsg) => {
     if (isnot) {
-        console.error("总共数据：" + data)
-        console.error("创建成功：" + (data - msg.length))
+        console.error("总共数据：" + data.length)
+        console.error("创建成功：" + (data.length - msg.length))
         console.error("创建失败：" + msg.length)
         console.error("失败详情：" + msg)
         console.error("删除失败：" + dropmsg.length)
         console.error("删除失败详情：" + dropmsg)
-        insertSql(["v_ABCType", "v_bom"], (isnot, msGesture, msgInsert) => {
-            console.error("查询问题：" + msGesture)
-            console.error("插入问题：" + msgInsert)
-        })
+        //转换为表数组
+        if (data && data.length > 0) {
+            let names = []
+            data.forEach((v, i) => {
+                names.push(v.name)
+            });
+            insertSql(names, (isnot, msGesture, msgInsert) => {
+                console.error("查询问题：" + msGesture)
+                console.error("插入问题：" + msgInsert)
+            })
+        }
     } else {
         console.error(data)
     }
