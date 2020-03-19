@@ -98,9 +98,9 @@ const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffix
                     dropmsg.push(msgs + ' \n<br/>')
                 }
                 resolve(1);
-                if (i === recordset.length - 1) {
+                /*if (i === recordset.length - 1) {
                     console.log(msg);
-                }
+                }*/
             });
         });
     });
@@ -115,8 +115,6 @@ const dealSync = async function (data, callback) {
     let fromCreateSql = `_0001 from `;//新建表名后缀添加0001
     let exec = "exec p_tb_mssqltomysql ";
     let selectSql = "select * from ";
-    let insertSql = "insert into ";
-    let insertSqlSuffix = " set ? ";
     let msg = [];
     let dropmsg = [];
     for (let i = 0; i < data.recordset.length; i++) {
@@ -157,7 +155,7 @@ function convertSql(bool, viewNames, type, callback) {
     //查询视图名称
     db.sql(getView, (err, data) => {
         if (data && data.recordset && data.recordset.length > 0) {
-            dealSync(data,  (err, data, msg, dropmsg) => {
+            dealSync(data, (err, data, msg, dropmsg) => {
                 callback(err, data, msg, dropmsg)
             });
         } else {
@@ -165,6 +163,85 @@ function convertSql(bool, viewNames, type, callback) {
         }
     })
 }
+
+
+/**
+ * 数据插入
+ * @param names 指表名集合
+ * @param callback
+ * 需要统计每个表成功了多少条数据
+ */
+const insertSql = async function (names, callback) {
+    //获取所有表名
+    if (names && names.length > 0) {
+        //查询失败信息
+        let msg = [];
+        //插入失败信息
+        let insertMsg = []
+        for (let i = 0; i < names.length; i++) {
+            let name = names[i]
+            await asyncInsertAjax(name, msg, names, i, insertMsg)
+        }
+        callback(true, msg, insertMsg)
+    }
+};
+
+function dealInsert(name, names, i, callback) {
+    let insertSql = "insert into ";
+    let insertSqlSuffix = " set ? ";
+    db.sql('select * from ' + name, (err, data) => {
+        if (err) {
+            console.error("第 " + i + " 行查询失败!")
+            callback(false, "第 " + i + " 行查询失败!" + "【" + name + "】")
+        } else {
+            if (data && data.recordset && data.recordset.length > 0) {
+                //7.执行数据导入-单条导入，防止宕机
+                let success = 0;
+                let fail = 0;
+                let total = data.recordset.length
+                data.recordset.forEach((v1, i1) => {
+                    db2.query(insertSql + name + insertSqlSuffix, [v1], (err5, data5) => {
+                        if (err5) {
+                            fail++;
+                        } else {
+                            success++;
+                        }
+                        //每隔20条打印一次
+                        if (i1 % 1000 == 0) {
+                            console.error("第 " + i + " 行" + "【" + name + "】" + "total::" + total + "success:" + success + "||" + "fail:" + fail)
+                        }
+                        //最后一条执行结束后，callback
+                        if (i1 == data.recordset.length - 1) {
+                            console.error("第 " + i + " 行" + "【" + name + "】" + "total::" + total + "success:" + success + "||" + "fail:" + fail);
+                            callback(true, "第 " + i + " 行" + "【" + name + "】" + "total::" + total + "success:" + success + "||" + "fail:" + fail);
+                        }
+                    })
+                });
+            } else {
+                console.error("第 " + i + " 行查询为null!")
+                callback(false, "第 " + i + " 行查询为null!" + "【" + name + "】")
+            }
+        }
+    })
+}
+
+//获取所有视图的视图名称
+const asyncInsertAjax = function (name, msg, names, i, insertMsg) {
+    return new Promise(function (resolve, reject) {
+        dealInsert(name, names, i, (isnot, data) => {
+            if (!isnot) {
+                msg.push(data + ' \n<br/>');
+            } else {
+                insertMsg.push(data + ' \n<br/>');
+            }
+            resolve(1);
+            /*if (i === names.length - 1) {
+                console.log(msg);
+            }*/
+        });
+    });
+}
+
 
 // convertSql(true, null, "V", (isnot, data, msg, dropmsg) => {
 //     if (isnot) {
@@ -178,10 +255,20 @@ function convertSql(bool, viewNames, type, callback) {
 //         console.error(data)
 //     }
 // });
-convertSql(false, ["v_ABCType", "v_bom"], 'V', (err, data) => {
+convertSql(false, ["v_ABCType", "v_bom"], 'V', (isnot, data, msg, dropmsg) => {
+    if (isnot) {
+        console.error("总共数据：" + data)
+        console.error("创建成功：" + (data - msg.length))
+        console.error("创建失败：" + msg.length)
+        console.error("失败详情：" + msg)
+        console.error("删除失败：" + dropmsg.length)
+        console.error("删除失败详情：" + dropmsg)
+        insertSql(["v_ABCType", "v_bom"], (isnot, msGesture, msgInsert) => {
+            console.error("查询问题：" + msGesture)
+            console.error("插入问题：" + msgInsert)
+        })
+    } else {
+        console.error(data)
+    }
 });
 
-
-function insertSql(bool, names,) {
-
-};
