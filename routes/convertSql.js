@@ -259,7 +259,31 @@ const asyncInsertAjax = function (name, msg, names, i, insertMsg) {
 //         console.error(data)
 //     }
 // });
-convertSql(false, ["v_ABCType", "v_bom"], 'V', (isnot, data, msg, dropmsg) => {
+/*convertSql(false, ["v_ABCType", "v_bom"], 'V', (isnot, data, msg, dropmsg) => {
+    if (isnot) {
+        console.error("总共数据：" + data.length)
+        console.error("创建成功：" + (data.length - msg.length))
+        console.error("创建失败：" + msg.length)
+        console.error("失败详情：" + msg)
+        console.error("删除失败：" + dropmsg.length)
+        console.error("删除失败详情：" + dropmsg)
+        //转换为表数组
+        if (data && data.length > 0) {
+            let names = []
+            data.forEach((v, i) => {
+                names.push(v.name)
+            });
+            insertSql(names, (isnot, msGesture, msgInsert) => {
+                console.error("查询问题：" + msGesture)
+                console.error("插入问题：" + msgInsert)
+            })
+        }
+    } else {
+        console.error(data)
+    }
+});*/
+
+convertSql(true, null, 'V', (isnot, data, msg, dropmsg) => {
     if (isnot) {
         console.error("总共数据：" + data.length)
         console.error("创建成功：" + (data.length - msg.length))
