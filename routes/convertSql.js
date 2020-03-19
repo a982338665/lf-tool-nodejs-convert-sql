@@ -1,9 +1,9 @@
 const db = require('../util/mssql.js');
 const db2 = require('../util/mysql.js');
 
-function dropTableMssql(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, callback) {
+function dropTableMssql(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, callback) {
     //是视图的时候删除
-    if (type == 'V' || type == 'v') {
+    if (v.xtype.trim() == 'V' || v.xtype.trim() == 'v') {
         let dropsql = basedropSql + v.name + suffixSql;
         db.sql(dropsql, (err, data) => {
             if (err) {
@@ -68,13 +68,13 @@ function convertMysql(execSql, i, v, callback) {
     })
 }
 
-function dealMsg(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, callback) {
+function dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, callback) {
     let sql = baseCreateSql + v.name + fromCreateSql + v.name + ";";
-    if (type == "U" || type == "u") {
+    if (v.xtype.trim() == "U" || v.xtype.trim() == "u") {
         //数据表直接转换
         let execSql = exec + v.name + ";";
         convertMysql(execSql, i, v, callback);
-    } else if (type == "V" || type == "v") {
+    } else if (v.xtype.trim() == "V" || v.xtype.trim() == "v") {
         //1.视图转换为表
         db.sql(sql, (err1, data1) => {
             //2.获取表结构并转换
@@ -82,15 +82,15 @@ function dealMsg(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, 
             convertMysql(execSql, i, v, callback);
         })
     } else {
-        callback(false,"type类型错误")
+        callback(false, "type类型错误")
     }
 }
 
 //获取所有视图的视图名称
-const asyncAjax = function (baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, dropmsg, i, recordset) {
+const asyncAjax = function (baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, dropmsg, i, recordset) {
     return new Promise(function (resolve, reject) {
-        dealMsg(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (err, data) => {
-            dropTableMssql(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (isnot, names, msgs) => {
+        dealMsg(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (err, data) => {
+            dropTableMssql(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, i, (isnot, names, msgs) => {
                 if (!err) {
                     msg.push(data + ' \n<br/>');
                 }
@@ -108,7 +108,7 @@ const asyncAjax = function (baseCreateSql, v, type, fromCreateSql, basedropSql, 
 }
 
 //将视图转为表结构创建出来，不添加数据
-const dealSync = async function (data, type, callback) {
+const dealSync = async function (data, callback) {
     let basedropSql = `drop table `
     let suffixSql = `_0001; `
     let baseCreateSql = `select top 500 * into `
@@ -121,7 +121,7 @@ const dealSync = async function (data, type, callback) {
     let dropmsg = [];
     for (let i = 0; i < data.recordset.length; i++) {
         let v = data.recordset[i];
-        await asyncAjax(baseCreateSql, v, type, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, dropmsg, i, data.recordset);
+        await asyncAjax(baseCreateSql, v, fromCreateSql, basedropSql, suffixSql, exec, selectSql, msg, dropmsg, i, data.recordset);
     }
     callback(true, data.recordset.length, msg, dropmsg)
 }
@@ -137,13 +137,15 @@ const dealSync = async function (data, type, callback) {
  */
 function convertSql(bool, viewNames, type, callback) {
     //如果是true，获取所有视图转换
-    let getView = "select id,name from sysobjects where xtype= " + "'" + type +
-        "'";
+    let getView = "select id,name,xtype from sysobjects where 1=1  "
+    if (type && (type == "U" || type == "V")) {
+        getView = getView + " and xtype = " + "'" + type + "' ";
+    }
     if (!bool) {
-        if (viewNames && viewNames.length>0) {
+        if (viewNames && viewNames.length > 0) {
             getView = getView + " and name in (";
-            viewNames.forEach((v,i) => {
-                getView = getView + "'" +v + "',";
+            viewNames.forEach((v, i) => {
+                getView = getView + "'" + v + "',";
             })
             getView = (getView.substring(getView.length - 1) == ',') ? getView.substring(0, getView.length - 1) : getView;
             getView = getView + ")";
@@ -155,7 +157,7 @@ function convertSql(bool, viewNames, type, callback) {
     //查询视图名称
     db.sql(getView, (err, data) => {
         if (data && data.recordset && data.recordset.length > 0) {
-            dealSync(data, type, (err, data, msg, dropmsg) => {
+            dealSync(data,  (err, data, msg, dropmsg) => {
                 callback(err, data, msg, dropmsg)
             });
         } else {
@@ -176,5 +178,10 @@ function convertSql(bool, viewNames, type, callback) {
 //         console.error(data)
 //     }
 // });
-convertSql(false, ["v_ABCType","v_bom"],'U', (err, data) => {
+convertSql(false, ["v_ABCType", "v_bom"], 'V', (err, data) => {
 });
+
+
+function insertSql(bool, names,) {
+
+};
